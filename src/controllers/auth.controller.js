@@ -17,7 +17,11 @@ const login = async (req, res) => {
         if (!email || !password) {
             Response.errorResponse(res, 401, true, "Authentication failed", "email and password are required");
         } else {
-            const user = await User.findOne({ email });
+            const user = await User.findOne({
+                where: {
+                    email: email
+                }
+            });
             if (!user) {
                 Response.errorResponse(res, 401, true, "Authentication failed", "User not found");
             } else {
@@ -32,7 +36,12 @@ const login = async (req, res) => {
                         true,
                         "Authentication successfull",
                         [
-                            { user },
+                            { 
+                                name: user.name,
+                                email: user.email,
+                                role_id: user.role_id,
+                                state: user.state
+                            },
                             { token: token }
                         ]
                     );
