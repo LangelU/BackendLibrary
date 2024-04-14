@@ -1,26 +1,54 @@
 const { User } = require("../models/user.model");
 const UsersService = require("../services/user.service");
 const { Response } = require("../utilities/responseHandler");
+const { Op } = require('sequelize');
 
 const bcrypt = require('bcrypt');
 
 const service = new UsersService();
 
 const getUsers = async (req, res) => {
-    try {
-        const query = await service.getUsers();
-        if (req.auth_user_id == 1) {
+    if (req.auth_user_id == 1) {
+        try {
+            const {name, last_name, email} = req.body;
+            let query;
+            if (!name && !last_name && !email) {
+                query = await service.getUsers();
+            } else {
+                //Apply filters
+                let whereClause = {};
+                if (name && last_name) {
+                    whereClause = {
+                        name: { [Op.like]: `%${name}%` },
+                        last_name: { [Op.like]: `%${last_name}%` }
+                    };
+                } else if (name) {
+                    whereClause = {
+                        name: { [Op.like]: `%${name}%` }
+                    };
+                } else if (last_name) {
+                    whereClause = {
+                        last_name: { [Op.like]: `%${last_name}%` }
+                    };
+                } else if (email) {
+                    whereClause = {
+                        email: { [Op.like]: `%${email}%` }
+                    };
+                }
+                query = await User.findAll({
+                    where: whereClause
+                })
+            }
             if (query.length == 0) {
-                Response.successResponse(res, 403, true, "Users not found", null);
+                Response.successResponse(res, 404, true, "Users not found", null);
             } else {
                 Response.successResponse(res, 200, true, "Users founded", query);
             }
-        } else {
-            Response.errorResponse(res, 500, false, "An error ocurred", "Unauthorized action");
+        } catch (err) {
+            Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
         }
-        
-    } catch (err) {
-        Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
+    } else {
+        Response.errorResponse(res, 500, false, "An error ocurred", "Unauthorized action");
     }
 }
 
@@ -29,7 +57,7 @@ const getUser = async (req, res) => {
     if (req.auth_role_id == 1 || req.auth_user_id == userId) {
         const query = await service.getUser(userId);
         if (query) {
-            Response.successResponse(res, 201, true, "User found", query);
+            Response.successResponse(res, 200, true, "User found", query);
         } else {
             Response.errorResponse(res, 404, true, "Validation error", "User not found");
         }
@@ -124,7 +152,7 @@ const deleteUser = async (req, res) => {
             Response.errorResponse(res, 401, false, "An error ocurred", "User not found");
         }
     } else {
-        Response.errorResponse(res, 500, false, "An inespered error ocurred", "Unauthorized action");
+        Response.errorResponse(res, 403, false, "An inespered error ocurred", "Unauthorized action");
     }
 }
 

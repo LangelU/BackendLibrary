@@ -45,7 +45,7 @@ const BookSchema = {
     year: {
         allowNull: true,
         type: DataTypes.STRING,
-        field: 'title'
+        field: 'year'
     },
     state: {
         allowNull: false,
