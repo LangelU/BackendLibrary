@@ -40,15 +40,14 @@ const getUsers = async (req, res) => {
                 })
             }
             if (query.length == 0) {
-                Response.successResponse(res, 404, true, "Users not found", null);
-            } else {
-                Response.successResponse(res, 200, true, "Users founded", query);
+                return Response.successResponse(res, 404, true, "Users not found", null);
             }
+            return Response.successResponse(res, 200, true, "Users founded", query);
         } catch (err) {
-            Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
+            return Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
         }
     } else {
-        Response.errorResponse(res, 500, false, "An error ocurred", "Unauthorized action");
+        return Response.errorResponse(res, 401, false, "An error ocurred", "Unauthorized action");
     }
 }
 
@@ -56,19 +55,30 @@ const getUser = async (req, res) => {
     const userId = req.params.id;
     if (req.auth_role_id == 1 || req.auth_user_id == userId) {
         const query = await service.getUser(userId);
-        if (query) {
-            Response.successResponse(res, 200, true, "User found", query);
-        } else {
-            Response.errorResponse(res, 404, true, "Validation error", "User not found");
+        if (!query) {
+            return Response.errorResponse(res, 404, true, "Validation error", "User not found");
         }
+        return Response.successResponse(res, 200, true, "User found", query);
     } else {
-        Response.errorResponse(res, 403, false, "Validation error ocurred", "Unauthorized action");
+        return Response.errorResponse(res, 403, false, "Validation error ocurred", "Unauthorized action");
     }
 }
 
 const register = async (req, res) => {
     try {
         const { name, last_name, email, password, password_confirmation } = req.body;
+        if (!name) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+        }
+        if (!last_name) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+        }
+        if (!email) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+        }
+        if (!password) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+        }
         const validateIfExist = await User.findOne({
             where: {
                 email: email
@@ -99,13 +109,13 @@ const register = async (req, res) => {
                     role_id: 2
                 }
                 const user = await service.createUser(data);
-                Response.successResponse(res, 201, true, "Register successfully", null);
+                return Response.successResponse(res, 201, true, "Register successfully", null);
             } else {
-                Response.errorResponse(res, 401, false, "Validation error ocurred", validator['errors']);
+                return Response.errorResponse(res, 401, false, "Validation error ocurred", validator['errors']);
             }    
         }
     } catch (err) {
-        Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
+        return Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
     }
 }
 
@@ -114,6 +124,18 @@ const updateUser = async (req, res) => {
     if (req.auth_role_id == 1 || req.auth_user_id == userId) {
         try {
             const { name, last_name, email, password, role_id, status } = req.body;
+            if (!name) {
+                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            }
+            if (!last_name) {
+                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            }
+            if (!email) {
+                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            }
+            if (!password) {
+                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            }
             const userData = await service.getUser(userId);
             let hashedPassword;
             if (password) {
@@ -128,12 +150,12 @@ const updateUser = async (req, res) => {
                 status: status ? status : userData.status
             }
             const query = await service.updateUser(userId, data);
-            Response.successResponse(res, 200, true, "User updated successfully", query);
+            return Response.successResponse(res, 200, true, "User updated successfully", query);
         } catch (err) {
-            Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
+            return Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
         }
     } else {
-        Response.errorResponse(res, 403, false, "Validation error ocurred", "Unauthorized action");
+        return Response.errorResponse(res, 401, false, "Validation error ocurred", "Unauthorized action");
     }
 }
 
@@ -141,18 +163,18 @@ const deleteUser = async (req, res) => {
     const userId = req.params.id;
     if (req.auth_role_id == 1 || req.auth_user_id === userId) {
         const userData = await service.getUser(userId);
-        if (userData) {
-            try {
-                const deleteUser = await service.deleteUser(userId);
-                Response.successResponse(res, 200, true, "User deleted successfully", null);
-            } catch (err) {
-                Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
-            }
-        } else {
-            Response.errorResponse(res, 401, false, "An error ocurred", "User not found");
+        if (!userData) {
+            return Response.errorResponse(res, 401, false, "An error ocurred", "User not found");
+        }
+
+        try {
+            const deleteUser = await service.deleteUser(userId);
+            return Response.successResponse(res, 200, true, "User deleted successfully", null);
+        } catch (err) {
+            return Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
         }
     } else {
-        Response.errorResponse(res, 403, false, "An inespered error ocurred", "Unauthorized action");
+        Response.errorResponse(res, 401, false, "An inespered error ocurred", "Unauthorized action");
     }
 }
 
@@ -160,29 +182,29 @@ const validateData = async (data) => {
     console.log()
     let errorMessages = [];
     let countErrors = 0;
-    if (!data.name || data.name.length > 255) {
+    if (data.name.length > 255) {
         errorMessages.push({
-            title: "name is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field name is 255"
         });
         countErrors++;
     }
-    if (!data.last_name || data.last_name.length > 255) {
+    if (data.last_name.length > 255) {
         errorMessages.push({
-            title: "last_name is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field last_name is 255"
         })
         countErrors++;
     }
 
-    if (!data.email || data.email.length > 255) {
+    if (data.email.length > 255) {
         errorMessages.push({
-            title: "email is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field email is 255"
         })
         countErrors++;
     }
 
-    if (!data.password || data.password.length > 255) {
+    if (data.password.length > 255) {
         errorMessages.push({
-            title: "password is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field password is 255"
         })
         countErrors++;
     }

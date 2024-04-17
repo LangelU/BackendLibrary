@@ -1,9 +1,9 @@
-const { Model, DataTypes, Sequelize } = require('sequelize');
+const { Model, DataTypes, sequelize } = require('sequelize');
+const { Reservation } = require('./reservations.model');
 
 const BOOKS_TABLE = 'books';
 
 class Book extends Model {
-
     static config(sequelize){
         return {
             sequelize,
@@ -58,6 +58,8 @@ const BookSchema = {
         field: 'deletedAt',
     }
 }
+
+//realtionships
 
 module.exports = { Book, BookSchema };
 

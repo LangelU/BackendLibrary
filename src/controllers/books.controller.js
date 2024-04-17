@@ -34,24 +34,25 @@ const getBooks = async (req, res) => {
             })
         }
         if (query.length == 0) {
-            Response.successResponse(res, 401, true, "Books not found", null);
-        } else {
-            Response.successResponse(res, 200, true, "Books found", query);
+            return Response.successResponse(res, 404, true, "Books not found", null);
         }
+        return Response.successResponse(res, 200, true, "Books found", query);
     } catch (err) {
-        Response.errorResponse(res, 500, false, "An unexpected error ocurred", err.message)
+        return Response.errorResponse(res, 500, false, "An unexpected error ocurred", err.message)
     }
 }
 
 const getBook = async (req, res) => {
     const bookId = req.params.id;
+    if (!bookId) {
+        return Response.errorResponse(res, 400, false, "Validation error", "Book id field are required");
+    }
     try {
         const query = await service.getBook(bookId);
         if (query) {
-            Response.successResponse(res, 200, true, "Book found", query);
-        } else {
-            Response.errorResponse(res, 404, false, "An error ocurred", "Book not found");
+            return Response.successResponse(res, 200, true, "Book found", query);
         }
+        Response.errorResponse(res, 404, false, "An error ocurred", "Book not found");
     } catch (err) {
         Response.errorResponse(res, 500, false, "An unexpected error ocurred", err.message);
     }
@@ -61,96 +62,110 @@ const createBook = async (req, res) => {
     if (req.auth_role_id == 1) {
         const {title, author, description, cover_page, year} = req.body;
         if (!title) {
-            Response.errorResponse(res, 401, false, "Register failed", "The title field is required");
-            return;
+            return Response.errorResponse(res, 403, false, "Validation error", "The field title is required")
         }
+        if (!author) {
+           return Response.errorResponse(res, 403, false, "Validation error", "The field author is required")
+        }
+        if (!description) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field description is required")
+        }
+
         const validateIfExist = await Book.findOne({
             where: {
                 title: title
             }
         });
         if (validateIfExist) {
-            Response.errorResponse(res, 401, false, "Register failed", "There is already a registered book with this title");
-        } else {
-            try {
-                const validationData = {
+            return Response.errorResponse(res, 401, false, "Register failed", "There is already a registered book with this title");
+        }
+        try {
+            const validationData = {
+                title: title,
+                author: author,
+                description: description,
+                cover_page: cover_page,
+                year: year
+            }
+            const validator = await validateData(validationData);
+            if (validator['success']) {
+                const data = {
                     title: title,
                     author: author,
                     description: description,
-                    cover_page: cover_page,
+                    cover_page: cover_page ?? "",
+                    state: 1,
                     year: year
                 }
-                const validator = await validateData(validationData);
-                if (validator['success']) {
-                    const data = {
-                        title: title,
-                        author: author,
-                        description: description,
-                        cover_page: cover_page ?? "",
-                        state: 1,
-                        year: year
-                    }
-                    const query = await service.createBook(data);
-                    Response.successResponse(res, 201, true, "Book created successfully", query)
-                } else {
-                    Response.errorResponse(res, 401, false, "Validation error", validator.errors)
-                }
-            } catch (err) {
-                Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
+                const query = await service.createBook(data);
+                return Response.successResponse(res, 201, true, "Book created successfully", query)
+            } else {
+                return Response.errorResponse(res, 400, false, "Validation error", validator.errors)
             }
+        } catch (err) {
+            Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
         }
     } else {
-        Response.errorResponse(res, 403, false, "An error ocurred", "Unauthorized action")
+        Response.errorResponse(res, 401, false, "An error ocurred", "Unauthorized action")
     }
 }
 
 const updateBook = async (req, res) => {
     if (req.auth_role_id == 1) {
+        const {title, author, description, cover_page, year, state} = req.body;
+        const bookId = req.params.id;
+        const bookData = await service.getBook(bookId)
+        if (!title) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field title is required")
+        }
+        if (!author) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field author is required")
+        }
+        if (!description) {
+            return Response.errorResponse(res, 403, false, "Validation error", "The field description is required")
+        }
+        if (!bookId) {
+            return Response.errorResponse(res, 404, false, "Update failed", "Book id field are required");
+        }
+
+        if (!bookData) {
+            return Response.errorResponse(res, 404, false, "Update failed", "Book not found");
+        }
+
         try {
-            const {title, author, description, cover_page, year, state} = req.body;
-            const bookId = req.params.id;
-            const validateIfExist = await Book.findByPk(bookId);
-            if (!validateIfExist) {
-                Response.errorResponse(res, 404, false, "Update failed", "Book not found");
-            } else {
-                try {
-                    const validationData = {
-                        title: title,
-                        author: author,
-                        description: description,
-                        cover_page: cover_page,
-                        year: year
-                    }
-                    const validator = await validateData(validationData);
-                    if (validator['success']) {
-                        const data = {
-                            title: title,
-                            author: author,
-                            description: description,
-                            cover_page: cover_page ?? "",
-                            state: 1,
-                            year: year
-                        }
-                        const query = await service.updateBook(bookId, data);
-                        Response.successResponse(res, 200, true, "Book updated successfully", query)
-                    } else {
-                        Response.errorResponse(res, 401, false, "Validation error", validator.errors)
-                    }
-                } catch (err) {
-                    Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
+            const validationData = {
+                title: title,
+                author: author,
+                description: description,
+                cover_page: cover_page,
+                year: year
+            }
+            const validator = await validateData(validationData);
+            if (validator['success']) {
+                const data = {
+                    title: title ?? bookData.title,
+                    author: author ?? bookData.author,
+                    description: description ?? bookData.description,
+                    cover_page: cover_page ?? bookData.cover_page,
+                    state: state ?? bookData.state,
+                    year: year ?? bookData.year
                 }
+                const query = await service.updateBook(bookId, data);
+                return Response.successResponse(res, 200, true, "Book updated successfully", query)
+            } else {
+                return Response.errorResponse(res, 400, false, "Validation error", validator.errors)
             }
         } catch (err) {
-            Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
+            Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message)
         }
     } else {
-        Response.errorResponse(res, 500, false, "An error ocurred", "Unauthorized action")
+        Response.errorResponse(res, 401, false, "An error ocurred", "Unauthorized action")
     }
 }
 
 const deleteBook = async (req, res) => {
     const bookId = req.params.id;
-    if (req.auth_role_id == 1 || req.auth_user_id === userId) {
+    if (req.auth_role_id == 1) {
         const bookData = await service.getBook(bookId);
         if (bookData) {
             try {
@@ -160,32 +175,32 @@ const deleteBook = async (req, res) => {
                 Response.errorResponse(res, 500, false, "An inespered error ocurred", err.message);
             }
         } else {
-            Response.errorResponse(res, 401, false, "Validation error ocurred", "Book not found");
+            Response.errorResponse(res, 404, false, "Validation error ocurred", "Book not found");
         }
     } else {
-        Response.errorResponse(res, 500, false, "An inespered error ocurred", "Unauthorized action");
+        Response.errorResponse(res, 401, false, "An error ocurred", "Unauthorized action");
     }
 }
 
 const validateData = async (data) => {
     let errorMessages = [];
     let countErrors = 0;
-    if (!data.title || data.title.length > 255) {
+    if (data.title.length > 255) {
         errorMessages.push({
-            title: "title is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field title is 255"
         });
         countErrors++;
     }
-    if (!data.author || data.author.length > 255) {
+    if (data.author.length > 255) {
         errorMessages.push({
-            title: "author is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field author is 255"
         })
         countErrors++;
     }
 
-    if (!data.description || data.description.length > 255) {
+    if (data.description.length > 255) {
         errorMessages.push({
-            title: "description is required with a maximum of 255 characters"
+            title: "the maximum number of characters for the field description is 255"
         })
         countErrors++;
     }

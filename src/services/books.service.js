@@ -1,16 +1,30 @@
 const { models } = require('../libs/sequelize');
+const { Reservation } = require('../models/reservations.model');
+
 
 class BooksService {
     
     constructor() {}
 
     async getBooks() {
-        const res = await models.Book.findAll();
+        const res = await models.Book.findAll({
+            include: [{
+                model: Reservation,
+                attributes: ['user_id']
+            }],
+            attributes: ['id', 'title', 'author', 'description', 'year', 'state', 'createdAt']
+        });
         return res;
     }
 
     async getBook(id) {
-        const res = await models.Book.findByPk(id);
+        const res = await models.Book.findByPk(id, {
+            include: [{
+                model: Reservation,
+                attributes: ['user_id']
+            }],
+            attributes: ['id', 'title', 'author', 'description', 'year', 'state', 'createdAt']
+        });
         return res;
     }
 
