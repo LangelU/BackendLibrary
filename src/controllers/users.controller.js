@@ -71,13 +71,13 @@ const register = async (req, res) => {
             return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
         }
         if (!last_name) {
-            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            return Response.errorResponse(res, 403, false, "Validation error", "The field last_name is required")
         }
         if (!email) {
-            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            return Response.errorResponse(res, 403, false, "Validation error", "The field email is required")
         }
         if (!password) {
-            return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
+            return Response.errorResponse(res, 403, false, "Validation error", "The field password is required")
         }
         const validateIfExist = await User.findOne({
             where: {
@@ -85,7 +85,7 @@ const register = async (req, res) => {
             }
         });
         if (validateIfExist) {
-            Response.errorResponse(res, 401, false, "Register failed", "There is already a registered user with this email address");
+            return Response.errorResponse(res, 400, false, "Register failed", "There is already a registered user with this email address");
         } else {
             let validationData = {
                 name: name,
@@ -96,7 +96,7 @@ const register = async (req, res) => {
             const validator = await validateData(validationData);
             if (validator['success']) {
                 if (password != password_confirmation) {
-                    Response.errorResponse(res, 401, false, "Register failed", "Password and password confirmation do not match");
+                    return Response.errorResponse(res, 401, false, "Register failed", "Password and password confirmation do not match");
                 }
                 
                 const hashedPassword = await bcrypt.hash(password, 10);

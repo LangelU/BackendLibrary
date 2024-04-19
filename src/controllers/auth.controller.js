@@ -39,15 +39,15 @@ const login = async (req, res) => {
             200,
             true,
             "Authentication successfull",
-            [
-                { 
+            {
+                 
                     name: user.name,
                     email: user.email,
                     role_id: user.role_id,
-                    state: user.state
-                },
-                { token: token }
-            ]
+                    state: user.state,
+                    token: token
+                
+            }
         );
     } catch (error) {
         Response.errorResponse(res, 500, true, "An inespered error ocurred", error.message);
