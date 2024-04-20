@@ -16,6 +16,10 @@ const getUserFavorites = async (req, res) => {
             return Response.errorResponse(res, 404, false, "Validation error", "No active Favorites found for the user")
         }
 
+        if (query.length == 0) {
+            return Response.errorResponse(res, 404, false, "Validation error", "Favorites not found")
+        }
+
         const favoritesUserArray = query.map(item => item.book_id)
         const data = {
             data: query,

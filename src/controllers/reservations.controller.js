@@ -51,7 +51,12 @@ const getUserReservations = async (req, res) => {
         if(!query) {
             return Response.errorResponse(res, 404, false, "Validation error", "No active reservations found for the user")
         }
-        return Response.successResponse(res, 200, true, "Reservations found", query)
+        const reservationsUserArray = query.map(item => item.book_id)
+        const data = {
+            data: query,
+            userReservationsArray: reservationsUserArray
+        }
+        return Response.successResponse(res, 200, true, "Reservations found", data)
     } catch (err) {
         return Response.errorResponse(res, 500, false, "An unexpected error ocurred", err.message)
     }
