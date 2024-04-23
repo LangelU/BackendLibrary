@@ -43,7 +43,7 @@ const getReservations = async (req, res) => {
 const getUserReservations = async (req, res) => {
     const userId = req.params.user_id
     try {
-        const query = await Reservation.findOne({
+        const query = await service.getReservations({
             where: {
                 user_id: userId
             }
