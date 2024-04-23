@@ -7,7 +7,7 @@ const { Book } = require("../models/books.model");
 const getUserFavorites = async (req, res) => {
     const userId = req.params.user_id
     try {
-        const query = await Favorite.findAll({
+        const query = await service.getFavorites({
             where: {
                 user_id: userId
             }
