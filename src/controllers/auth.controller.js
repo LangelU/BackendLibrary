@@ -33,7 +33,7 @@ const login = async (req, res) => {
             return Response.errorResponse(res, 400, true, "Authentication failed", "Invalid credentials");
         }
 
-        const token = jwt.sign({ role_id: user.role_id, user_id: user.id }, secretKey, { expiresIn: "1h" });
+        const token = jwt.sign({ role_id: user.role_id, user_id: user.id, user_name: user.name }, secretKey, { expiresIn: "1h" });
         return Response.successResponse(
             res,
             200,
