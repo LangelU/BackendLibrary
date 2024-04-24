@@ -124,18 +124,6 @@ const updateUser = async (req, res) => {
     if (req.auth_role_id == 1 || req.auth_user_id == userId) {
         try {
             const { name, last_name, email, password, role_id, status } = req.body;
-            if (!name) {
-                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
-            }
-            if (!last_name) {
-                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
-            }
-            if (!email) {
-                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
-            }
-            if (!password) {
-                return Response.errorResponse(res, 403, false, "Validation error", "The field name is required")
-            }
             const userData = await service.getUser(userId);
             let hashedPassword;
             if (password) {
