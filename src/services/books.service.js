@@ -12,7 +12,7 @@ class BooksService {
                 model: Reservation,
                 attributes: ['user_id']
             }],
-            attributes: ['id', 'title', 'author', 'description', 'year', 'state', 'createdAt']
+            attributes: ['id', 'title', 'author', 'description', 'cover_page', 'year', 'state', 'createdAt']
         });
         return res;
     }
@@ -23,7 +23,7 @@ class BooksService {
                 model: Reservation,
                 attributes: ['user_id']
             }],
-            attributes: ['id', 'title', 'author', 'description', 'year', 'state', 'createdAt']
+            attributes: ['id', 'title', 'author', 'description', 'cover_page', 'year', 'state', 'createdAt']
         });
         return res;
     }
