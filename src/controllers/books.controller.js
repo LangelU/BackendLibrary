@@ -198,9 +198,9 @@ const validateData = async (data) => {
         countErrors++;
     }
 
-    if (data.description.length > 255) {
+    if (data.description.length > 2000) {
         errorMessages.push({
-            title: "the maximum number of characters for the field description is 255"
+            title: "the maximum number of characters for the field description is 2000"
         })
         countErrors++;
     }
