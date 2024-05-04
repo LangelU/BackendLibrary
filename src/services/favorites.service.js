@@ -5,8 +5,9 @@ const { User } = require('../models/user.model');
 class FavoriteService {
     constructor() {}
 
-    async getFavorites() {
+    async getFavorites(options) {
         const res = await models.Favorite.findAll({
+            ...options,
             include: [
                 {
                     model: Book,
