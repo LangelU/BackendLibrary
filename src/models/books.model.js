@@ -1,5 +1,4 @@
 const { Model, DataTypes, sequelize } = require('sequelize');
-const { Reservation } = require('./reservations.model');
 
 const BOOKS_TABLE = 'books';
 

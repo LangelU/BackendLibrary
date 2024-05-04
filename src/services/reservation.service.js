@@ -6,8 +6,9 @@ class ReservationService {
     
     constructor() {}
 
-    async getReservations() {
+    async getReservations(options) {
         const res = await models.Reservation.findAll({
+            ...options,
             include: [
                 {
                     model: Book,
